@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AllocationBase {
+  revenue
+  equal
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String?
+  createdAt DateTime  @default(now())
+  sessions  Session[]
+  projects  Project[]
+  overheadPools OverheadPool[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Project {
+  id         String     @id @default(cuid())
+  name       String
+  revenue    Float
+  userId     String
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activities Activity[]
+  createdAt  DateTime   @default(now())
+}
+
+model Activity {
+  id        String     @id @default(cuid())
+  name      String
+  position  Int
+  projectId String
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  costItems CostItem[]
+  createdAt DateTime   @default(now())
+}
+
+model CostItem {
+  id         String   @id @default(cuid())
+  name       String
+  amount     Float
+  type       String
+  activityId String
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+}
+
+model OverheadPool {
+  id             String         @id @default(cuid())
+  name           String
+  monthlyCost    Float
+  allocationBase AllocationBase
+  userId         String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime       @default(now())
+}
